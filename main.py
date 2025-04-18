@@ -1,5 +1,6 @@
 import sys
 import pygame
+import asyncio  # Add asyncio import
 from constants import *
 from player import Player
 from asteroid import Asteroid
@@ -7,7 +8,7 @@ from asteroidfield import AsteroidField
 from shot import Shot
 
 
-def main():
+async def main():  # Change to async function
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     clock = pygame.time.Clock()
@@ -38,7 +39,8 @@ def main():
         for asteroid in asteroids:
             if asteroid.collides_with(player):
                 print("Game over!")
-                sys.exit()
+                # Don't use sys.exit() in browser environment
+                return  # Use return instead of sys.exit()
 
             for shot in shots:
                 if asteroid.collides_with(shot):
@@ -54,7 +56,17 @@ def main():
 
         # limit the framerate to 60 FPS
         dt = clock.tick(60) / 1000
+        
+        # Allow browser to update - critical for PyScript
+        await asyncio.sleep(0)
 
 
 if __name__ == "__main__":
-    main()
+    # Check if running in browser (Pyodide/PyScript) or desktop
+    try:
+        import js
+        # We're in a browser environment
+        asyncio.ensure_future(main())
+    except ImportError:
+        # We're in a standard Python environment
+        asyncio.run(main())
